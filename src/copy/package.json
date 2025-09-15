@@ -1,6 +1,6 @@
 {
-  "name": "swiper",
-  "version": "12.0.1",
+  "name": "@technicaldirector/swiper",
+  "version": "12.0.1-dev.1",
   "description": "Most modern mobile touch slider and framework with hardware accelerated transitions",
   "typings": "swiper.d.ts",
   "type": "module",
@@ -121,7 +121,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nolimits4web/Swiper.git"
+    "url": "https://github.com/technicaldirector/Swiper.git"
   },
   "keywords": [
     "swiper",

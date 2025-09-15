@@ -36,7 +36,7 @@ export default function updateSlides() {
   const previousSnapGridLength = swiper.snapGrid.length;
   const previousSlidesGridLength = swiper.slidesGrid.length;
 
-  const swiperSize = swiper.size - offsetBefore - offsetAfter;
+  const swiperSize = swiper.size - offsetBefore - (params.loop ? offsetAfter : 0);
   let spaceBetween = params.spaceBetween;
   let slidePosition = -offsetBefore;
   let prevSlideSize = 0;
@@ -191,7 +191,7 @@ export default function updateSlides() {
     index += 1;
   }
 
-  swiper.virtualSize = Math.max(swiper.virtualSize, swiperSize) + offsetAfter;
+  swiper.virtualSize = swiper.virtualSize + offsetAfter;
 
   if (rtl && wrongRTL && (params.effect === 'slide' || params.effect === 'coverflow')) {
     wrapperEl.style.width = `${swiper.virtualSize + spaceBetween}px`;
@@ -221,6 +221,12 @@ export default function updateSlides() {
       1
     ) {
       snapGrid.push(swiper.virtualSize - swiperSize);
+    }
+
+    // Add offsetAfter to the latest snap point
+    // But not if slides are equal slide count... Then we only want to see offsetBefore
+    if (slidesLength > params.slidesPerView) {
+      snapGrid[snapGrid.length - 1] = snapGrid[snapGrid.length - 1] + offsetAfter;
     }
   }
   if (isVirtual && params.loop) {

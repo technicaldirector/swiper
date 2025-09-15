@@ -1,20 +1,35 @@
-name: Build
+name: Build and Publish
 on:
   push:
     branches: [master, Swiper6, Swiper7, Swiper8]
-  pull_request:
-    branches: [master, Swiper6, Swiper7, Swiper8]
+
+permissions:
+  contents: read
+  packages: write
+
 jobs:
-  test:
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Install Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: 18
+          registry-url: 'https://npm.pkg.github.com/'
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
       - name: Run build
         run: npm run build:prod
+
+      - name: Publish from /dist
+        working-directory: dist
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
