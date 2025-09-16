@@ -279,11 +279,14 @@ export default function onTouchMove(event) {
       swiper.loopFix({
         direction: 'next',
         setTranslate: true,
-        activeSlideIndex:
-          swiper.slides.length -
-          (params.slidesPerView === 'auto'
-            ? swiper.slidesPerViewDynamic()
-            : Math.ceil(parseFloat(params.slidesPerView, 10))),
+        activeSlideIndex: params.centeredSlides
+          ? swiper.getSlideIndex(
+              swiper.slides.find((el) => el.classList.contains(params.slideActiveClass)),
+            )
+          : swiper.slides.length -
+            (params.slidesPerView === 'auto'
+              ? swiper.slidesPerViewDynamic()
+              : Math.ceil(parseFloat(params.slidesPerView, 10))),
       });
     }
     if (data.currentTranslate < swiper.maxTranslate()) {
