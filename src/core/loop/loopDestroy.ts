@@ -1,3 +1,4 @@
+import { elementChildren } from '../../shared/utils';
 import type { Swiper } from '../core';
 
 // Loop module re-orders slides and stashes their original index in this
@@ -9,7 +10,18 @@ interface LoopSlideEl extends HTMLElement {
 export default function loopDestroy(this: Swiper): void {
   const swiper = this;
   const { params, slidesEl } = swiper;
-  if (!params.loop || !slidesEl || (swiper.virtual && swiper.params.virtual?.enabled)) return;
+  if (!slidesEl) return;
+
+  // Remove any duplicates added by loopFillSlides / loopFillSlidesCount. Done
+  // before the loop guard so disabling loop (params.loop is already false here
+  // when toggled via breakpoints) still restores the original slide set.
+  const fillSlides = elementChildren(slidesEl, `.${params.slideFillClass ?? 'swiper-slide-fill'}`);
+  if (fillSlides.length) {
+    fillSlides.forEach((el) => el.remove());
+    swiper.recalcSlides();
+  }
+
+  if (!params.loop || (swiper.virtual && swiper.params.virtual?.enabled)) return;
   swiper.recalcSlides();
 
   const newSlidesOrder: HTMLElement[] = [];

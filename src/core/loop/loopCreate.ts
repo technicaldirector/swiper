@@ -13,29 +13,32 @@ export default function loopCreate(this: Swiper, slideRealIndex?: number, initia
   // `slideFillClass` and stripped again in loopDestroy so toggling loop (e.g. via
   // breakpoints) restores the original set.
   const fillLoopSlides = () => {
+    const fillClass = params.slideFillClass ?? 'swiper-slide-fill';
     // Start from a clean set so re-creating the loop never multiplies duplicates.
-    elementChildren(slidesEl, `.${params.slideFillClass}`).forEach((el) => el.remove());
+    elementChildren(slidesEl, `.${fillClass}`).forEach((el) => el.remove());
 
-    const manual = params.loopFillSlidesCount > 0;
+    const fillCount = params.loopFillSlidesCount ?? 0;
+    const manual = fillCount > 0;
     if (!params.loopFillSlides && !manual) return;
 
     const originalSlides = elementChildren(slidesEl, `.${params.slideClass}, swiper-slide`);
     const baseLength = originalSlides.length;
     if (baseLength === 0) return;
 
-    let targetCount;
+    let targetCount: number;
     if (manual) {
       // Repeat the whole set `loopFillSlidesCount` extra times.
-      targetCount = baseLength * (params.loopFillSlidesCount + 1);
+      targetCount = baseLength * (fillCount + 1);
     } else {
-      if (params.slidesPerView === 'auto') {
+      const spv = params.slidesPerView;
+      if (typeof spv !== 'number') {
         showWarning(
           'Swiper loopFillSlides: cannot auto-fill with slidesPerView "auto". Set loopFillSlidesCount to fill manually.',
         );
         return;
       }
       // Need the visible width plus room for the rearranged slides on each side.
-      const minNeeded = Math.ceil(params.slidesPerView) * 2 + 1;
+      const minNeeded = Math.ceil(spv) * 2 + 1;
       if (baseLength >= minNeeded) return;
       targetCount = minNeeded;
     }
@@ -47,12 +50,14 @@ export default function loopCreate(this: Swiper, slideRealIndex?: number, initia
       params.slideVisibleClass,
       params.slideFullyVisibleClass,
       params.slideBlankClass,
-    ];
+    ].filter((c): c is string => typeof c === 'string');
 
     let added = 0;
     while (baseLength + added < targetCount) {
-      const fillEl = originalSlides[added % baseLength].cloneNode(true);
-      fillEl.classList.add(params.slideFillClass);
+      const source = originalSlides[added % baseLength];
+      if (!source) break;
+      const fillEl = source.cloneNode(true) as HTMLElement;
+      fillEl.classList.add(fillClass);
       fillEl.classList.remove(...stateClasses);
       fillEl.removeAttribute('data-swiper-slide-index');
       slidesEl.append(fillEl);
