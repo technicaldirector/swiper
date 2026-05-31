@@ -1,6 +1,6 @@
 {
   "name": "@technicaldirector/swiper",
-  "version": "12.1.4-dev.1",
+  "version": "12.1.4-dev.2",
   "description": "Most modern mobile touch slider and framework with hardware accelerated transitions",
   "type": "module",
   "scripts": {

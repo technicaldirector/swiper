@@ -4,7 +4,7 @@ on:
     branches: [master, Swiper6, Swiper7, Swiper8]
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -33,3 +33,18 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read package version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          files: |
+            dist/swiper-bundle.js
+            dist/swiper-bundle.css
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
