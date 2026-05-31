@@ -663,6 +663,28 @@ export interface SwiperOptions {
   loopAdditionalSlides?: number;
 
   /**
+   * When enabled (and `loop` is on), automatically duplicates the real slides
+   * until there are enough for loop mode to work without empty/jumpy frames,
+   * based on the current `slidesPerView` (roughly `ceil(slidesPerView) * 2 + 1`).
+   * Duplicated slides are tagged with `slideFillClass` and removed again when
+   * loop is destroyed. Not supported with `slidesPerView: 'auto'` — use
+   * `loopFillSlidesCount` in that case.
+   *
+   * @default false
+   */
+  loopFillSlides?: boolean;
+
+  /**
+   * When set (and `loop` is on), repeats the whole set of real slides this many
+   * extra times (e.g. `2` turns 5 slides into 15). Takes precedence over
+   * `loopFillSlides`. Useful when you want explicit control or use
+   * `slidesPerView: 'auto'`.
+   *
+   * @default 0
+   */
+  loopFillSlidesCount?: number;
+
+  /**
    * If enabled then slideNext/Prev will do nothing while slider is animating in loop mode
    *
    * @default true
@@ -821,6 +843,15 @@ export interface SwiperOptions {
    * @note Not supported in Swiper React/Vue
    */
   slideBlankClass?: string;
+
+  /**
+   * CSS class name of the duplicate slides added by `loopFillSlides` / `loopFillSlidesCount`
+   *
+   * @default 'swiper-slide-fill'
+   *
+   * @note Not supported in Swiper React/Vue
+   */
+  slideFillClass?: string;
 
   /**
    * CSS class name of slide which is right after currently active slide

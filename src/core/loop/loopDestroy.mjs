@@ -1,7 +1,20 @@
+import { elementChildren } from '../../shared/utils.mjs';
+
 export default function loopDestroy() {
   const swiper = this;
   const { params, slidesEl } = swiper;
-  if (!params.loop || !slidesEl || (swiper.virtual && swiper.params.virtual.enabled)) return;
+  if (!slidesEl) return;
+
+  // Remove any duplicates added by loopFillSlides / loopFillSlidesCount. Done
+  // before the loop guard so disabling loop (params.loop already false here when
+  // toggled via breakpoints) still restores the original slide set.
+  const fillSlides = elementChildren(slidesEl, `.${params.slideFillClass}`);
+  if (fillSlides.length) {
+    fillSlides.forEach((el) => el.remove());
+    swiper.recalcSlides();
+  }
+
+  if (!params.loop || (swiper.virtual && swiper.params.virtual.enabled)) return;
   swiper.recalcSlides();
 
   const newSlidesOrder = [];

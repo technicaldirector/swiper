@@ -104,6 +104,8 @@ export default {
   loopAddBlankSlides: true,
   loopAdditionalSlides: 0,
   loopPreventsSliding: true,
+  loopFillSlides: false,
+  loopFillSlidesCount: 0,
 
   // rewind
   rewind: false,
@@ -125,6 +127,7 @@ export default {
   containerModifierClass: 'swiper-', // NEW
   slideClass: 'swiper-slide',
   slideBlankClass: 'swiper-slide-blank',
+  slideFillClass: 'swiper-slide-fill',
   slideActiveClass: 'swiper-slide-active',
   slideVisibleClass: 'swiper-slide-visible',
   slideFullyVisibleClass: 'swiper-slide-fully-visible',

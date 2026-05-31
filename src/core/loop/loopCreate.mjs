@@ -5,6 +5,67 @@ export default function loopCreate(slideRealIndex, initial) {
   const { params, slidesEl } = swiper;
   if (!params.loop || (swiper.virtual && swiper.params.virtual.enabled)) return;
 
+  // Duplicate real slides so loop mode has enough of them. Loop rearranges the
+  // actual slides, so with too few it shows empty/jumpy frames. `loopFillSlides`
+  // fills automatically from slidesPerView; `loopFillSlidesCount` repeats the
+  // whole set a fixed number of extra times. Fills are tagged with
+  // `slideFillClass` and stripped again in loopDestroy so toggling loop (e.g. via
+  // breakpoints) restores the original set.
+  const fillLoopSlides = () => {
+    // Start from a clean set so re-creating the loop never multiplies duplicates.
+    elementChildren(slidesEl, `.${params.slideFillClass}`).forEach((el) => el.remove());
+
+    const manual = params.loopFillSlidesCount > 0;
+    if (!params.loopFillSlides && !manual) return;
+
+    const originalSlides = elementChildren(slidesEl, `.${params.slideClass}, swiper-slide`);
+    const baseLength = originalSlides.length;
+    if (baseLength === 0) return;
+
+    let targetCount;
+    if (manual) {
+      // Repeat the whole set `loopFillSlidesCount` extra times.
+      targetCount = baseLength * (params.loopFillSlidesCount + 1);
+    } else {
+      if (params.slidesPerView === 'auto') {
+        showWarning(
+          'Swiper loopFillSlides: cannot auto-fill with slidesPerView "auto". Set loopFillSlidesCount to fill manually.',
+        );
+        return;
+      }
+      // Need the visible width plus room for the rearranged slides on each side.
+      const minNeeded = Math.ceil(params.slidesPerView) * 2 + 1;
+      if (baseLength >= minNeeded) return;
+      targetCount = minNeeded;
+    }
+
+    const stateClasses = [
+      params.slideActiveClass,
+      params.slideNextClass,
+      params.slidePrevClass,
+      params.slideVisibleClass,
+      params.slideFullyVisibleClass,
+      params.slideBlankClass,
+    ];
+
+    let added = 0;
+    while (baseLength + added < targetCount) {
+      const fillEl = originalSlides[added % baseLength].cloneNode(true);
+      fillEl.classList.add(params.slideFillClass);
+      fillEl.classList.remove(...stateClasses);
+      fillEl.removeAttribute('data-swiper-slide-index');
+      slidesEl.append(fillEl);
+      added += 1;
+    }
+
+    if (added > 0) {
+      swiper.recalcSlides();
+      swiper.updateSlides();
+    }
+  };
+
+  fillLoopSlides();
+
   const initSlides = () => {
     const slides = elementChildren(slidesEl, `.${params.slideClass}, swiper-slide`);
 
