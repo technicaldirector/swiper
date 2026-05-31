@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { SwiperOptions, Swiper as SwiperClass } from './types/index.d.ts';
+import type { SwiperOptions, Swiper as SwiperClass } from './types/public';
 
 type SwiperProps = Omit<
   React.HTMLAttributes<HTMLElement>,
@@ -42,6 +42,7 @@ type SwiperProps = Omit<
 interface SlideData {
   isActive: boolean;
   isVisible: boolean;
+  isFullyVisible: boolean;
   isPrev: boolean;
   isNext: boolean;
 }

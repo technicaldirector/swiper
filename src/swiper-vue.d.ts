@@ -1,3 +1,5 @@
+import { ComponentOptionsMixin, DefineComponent, PropType, Ref } from 'vue';
+
 import type {
   A11yOptions,
   AutoplayOptions,
@@ -21,9 +23,8 @@ import type {
   ZoomOptions,
   FreeModeOptions,
   GridOptions,
-} from './types/index.d.ts';
-import { ComponentOptionsMixin, DefineComponent, PropType, Ref } from 'vue';
-import type { SwiperOptions, Swiper as SwiperClass } from './types/index.d.ts';
+} from './types/public';
+import type { SwiperOptions, Swiper as SwiperClass } from './types/public';
 
 declare const Swiper: DefineComponent<
   {
@@ -159,6 +160,10 @@ declare const Swiper: DefineComponent<
       default: undefined;
     };
     centerInsufficientSlides: {
+      type: BooleanConstructor;
+      default: undefined;
+    };
+    snapToSlideEdge: {
       type: BooleanConstructor;
       default: undefined;
     };

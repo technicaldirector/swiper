@@ -1,17 +1,18 @@
-/* eslint-disable no-shadow */
 import fs from 'fs';
-import { rollup } from 'rollup';
+
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
-import { babel } from '@rollup/plugin-babel';
-import elapsed from 'elapsed-time-logger';
+import typescript from '@rollup/plugin-typescript';
 import chalk from 'chalk';
-import getElementStyles from './utils/get-element-styles.js';
+import elapsed from 'elapsed-time-logger';
+import { rollup } from 'rollup';
+
 import { modules as configModules } from './build-config.js';
-import { capitalizeString } from './utils/helper.js';
-import minify from './utils/minify.js';
 import { banner } from './utils/banner.js';
+import getElementStyles from './utils/get-element-styles.js';
+import { capitalizeString } from './utils/helper.js';
 import isProd from './utils/isProd.js';
+import minify from './utils/minify.js';
 
 export default async function buildModules() {
   elapsed.start('modules');
@@ -19,46 +20,59 @@ export default async function buildModules() {
   const modules = [];
   configModules.forEach((name) => {
     const capitalized = capitalizeString(name);
-    const jsFilePath = `./src/modules/${name}/${name}.mjs`;
+    const jsFilePath = `./src/modules/${name}/${name}.ts`;
     if (fs.existsSync(jsFilePath)) {
       modules.push({ name, capitalized });
     }
   });
 
-  // eslint-disable-next-line
   const modulesPaths = configModules.map((name) => {
-    return `./src/modules/${name}/${name}.mjs`;
+    return `./src/modules/${name}/${name}.ts`;
   });
 
   // Create element bundle
   const coreElementContent = fs
-    .readFileSync('./src/swiper-element.mjs', 'utf-8')
-    .replace(`import Swiper from './swiper.mjs';`, `import Swiper from './swiper-bundle.mjs';`);
-  fs.writeFileSync('./src/swiper-element-bundle.mjs', coreElementContent);
+    .readFileSync('./src/swiper-element.ts', 'utf-8')
+    .replace(`import Swiper from './swiper';`, `import Swiper from './swiper-bundle';`);
+  fs.writeFileSync('./src/swiper-element-bundle.ts', coreElementContent);
 
   const output = await rollup({
     external: ['react', 'vue'],
     input: [
-      './src/swiper.mjs',
-      './src/swiper-bundle.mjs',
-      './src/swiper-element.mjs',
-      './src/swiper-element-bundle.mjs',
-      './src/swiper-vue.mjs',
-      './src/swiper-react.mjs',
+      './src/swiper.ts',
+      './src/swiper-bundle.ts',
+      './src/swiper-element.ts',
+      './src/swiper-element-bundle.ts',
+      './src/swiper-vue.ts',
+      './src/swiper-react.ts',
       ...modulesPaths,
-      './src/swiper-effect-utils.mjs',
+      './src/swiper-effect-utils.ts',
     ],
     plugins: [
       replace({
         delimiters: ['', ''],
         '//IMPORT_MODULES': modules
-          .map((mod) => `import ${mod.capitalized} from './modules/${mod.name}/${mod.name}.mjs';`)
+          .map((mod) => `import ${mod.capitalized} from './modules/${mod.name}/${mod.name}';`)
           .join('\n'),
         '//INSTALL_MODULES': modules.map((mod) => `${mod.capitalized}`).join(',\n  '),
         '//EXPORT': 'export default Swiper; export { Swiper }',
       }),
-      nodeResolve({ mainFields: ['module', 'main', 'jsnext'], rootDir: './src' }),
-      babel({ babelHelpers: 'bundled' }),
+      nodeResolve({
+        mainFields: ['module', 'main', 'jsnext'],
+        rootDir: './src',
+        extensions: ['.mjs', '.js', '.ts', '.tsx', '.json', '.node'],
+      }),
+      typescript({
+        tsconfig: './tsconfig.json',
+        noEmitOnError: true,
+        outDir: './dist/tmp',
+        compilerOptions: {
+          declaration: false,
+          declarationMap: false,
+          sourceMap: !isProd,
+          jsx: 'react',
+        },
+      }),
     ],
     onwarn() {},
   });
@@ -131,23 +145,23 @@ export default async function buildModules() {
       // ADD ELEMENT STYLES
       if (f === 'swiper-element.mjs') {
         content = content
-          .replace('//SWIPER_STYLES', `const SwiperCSS = \`${core}\``)
-          .replace('//SWIPER_SLIDE_STYLES', `const SwiperSlideCSS = \`${slide}\``);
+          .replace(`'__SWIPER_STYLES__'`, `\`${core}\``)
+          .replace(`'__SWIPER_SLIDE_STYLES__'`, `\`${slide}\``);
       }
       if (f === 'swiper-element-bundle.mjs') {
         content = content
           .replace('/swiper-bundle.js', `/swiper-bundle.mjs`)
-          .replace('//SWIPER_STYLES', `const SwiperCSS = \`${bundle}\``)
-          .replace('//SWIPER_SLIDE_STYLES', `const SwiperSlideCSS = \`${slide}\``);
+          .replace(`'__SWIPER_STYLES__'`, `\`${bundle}\``)
+          .replace(`'__SWIPER_SLIDE_STYLES__'`, `\`${slide}\``);
       }
       // ADD BANNER
       const bannerName = f.includes('react')
         ? 'React'
         : f.includes('vue')
-        ? 'Vue'
-        : f.includes('element')
-        ? 'Custom Element'
-        : '';
+          ? 'Vue'
+          : f.includes('element')
+            ? 'Custom Element'
+            : '';
 
       fs.writeFileSync(`./dist/${f}`, `${banner(bannerName)}\n${content}`);
     });
@@ -158,6 +172,15 @@ export default async function buildModules() {
     modules
       .map((mod) => `export {default as ${mod.capitalized}} from './${mod.name}.mjs';`)
       .join('\n'),
+  );
+
+  // MODULES_INDEX types — pair with index.mjs so `swiper/modules`
+  // imports also load each module's per-module augmentation block.
+  fs.writeFileSync(
+    './dist/modules/index.d.ts',
+    `${modules
+      .map((mod) => `export { default as ${mod.capitalized} } from './${mod.name}/${mod.name}';`)
+      .join('\n')}\n`,
   );
 
   // IIFE
@@ -210,7 +233,7 @@ export default async function buildModules() {
 
   // REMOVE ELEMENT BUNDLE
   if (isProd) {
-    fs.unlinkSync('./src/swiper-element-bundle.mjs');
+    fs.unlinkSync('./src/swiper-element-bundle.ts');
   }
 
   if (!isProd) {
@@ -241,10 +264,10 @@ export default async function buildModules() {
         const bannerName = f.includes('react')
           ? 'React'
           : f.includes('vue')
-          ? 'Vue'
-          : f.includes('element')
-          ? 'Custom Element'
-          : '';
+            ? 'Vue'
+            : f.includes('element')
+              ? 'Custom Element'
+              : '';
         return minify(f, `./dist/${f}`, bannerName);
       }),
     // IIFE

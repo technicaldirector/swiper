@@ -1,6 +1,6 @@
 import fs from 'fs';
-import path from 'path';
 import https from 'https';
+import path from 'path';
 import * as url from 'url';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -28,7 +28,7 @@ const buildTables = (sponsors) => {
     ...(sponsors['Platinum Sponsor'] || []),
     ...(sponsors['Gold Sponsor'] || []),
     ...(sponsors['Silver Sponsor'] || []),
-    ...(sponsors['Sponsor'] || []), // eslint-disable-line
+    ...(sponsors['Sponsor'] || []),
   ];
   let tableContent = '';
   if (tableSponsors.length > 0) {
@@ -44,6 +44,7 @@ const buildTables = (sponsors) => {
     if (rows.length > 0 && rows[rows.length - 1].length < perRow) {
       rows[rows.length - 1].push(...Array.from({ length: perRow - rows[rows.length - 1].length }));
     }
+    // oxfmt-ignore
     tableContent = `\n<table>\n${rows
       .map((items) =>
         [
@@ -55,7 +56,7 @@ const buildTables = (sponsors) => {
                 : [
                     `    <td align="center" valign="middle">`,
                     `      <a href="${item.link}" target="_blank">`,
-                    `        <img src="https://swiperjs.com/images/sponsors/${item.image}" alt="${item.title}" width="160">`,
+                    `        <img src="${item.image.startsWith('http') ? item.image : `https://swiperjs.com/images/sponsors/${item.image}`}" alt="${item.title}" width="160">`,
                     `      </a>`,
                     `    </td>`,
                   ].join('\n'),
@@ -107,7 +108,16 @@ const buildSponsors = async () => {
   const entries = await getSponsors();
   const sponsors = {};
   if (entries) {
-    const items = [...entries];
+    const items = [...entries].filter((entry) => {
+      if (entry.ref && (entry.ref.includes('opencollective') || entry.ref.includes('patreon'))) {
+        const dt = new Date(entry.createdAt).getTime();
+        const targetDate = new Date(2026, 3, 1).getTime();
+        if (dt > targetDate) {
+          return false;
+        }
+      }
+      return true;
+    });
     items.sort((a, b) => {
       return new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1;
     });
