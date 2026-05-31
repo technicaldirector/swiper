@@ -39,7 +39,7 @@ export default function updateSlides(this: Swiper): void {
   const previousSlidesGridLength = swiper.slidesGrid.length;
 
   const swiperSize = swiper.size - (offsetBefore as number) - (params.loop ? (offsetAfter as number) : 0);
-  let spaceBetween = number | string = params.spaceBetween!;
+  let spaceBetween: number | string = params.spaceBetween!;
   let slidePosition = -(offsetBefore as number);
   let prevSlideSize = 0;
   let index = 0;
@@ -208,7 +208,7 @@ export default function updateSlides(this: Swiper): void {
     index += 1;
   }
 
-  swiper.virtualSize = swiper.virtualSize + offsetAfter;
+  swiper.virtualSize = swiper.virtualSize + (offsetAfter as number);
 
   if (rtl && wrongRTL && (params.effect === 'slide' || params.effect === 'coverflow')) {
     wrapperEl.style.width = `${swiper.virtualSize + (spaceBetween as number)}px`;
@@ -285,8 +285,8 @@ export default function updateSlides(this: Swiper): void {
 
     // Add offsetAfter to the latest snap point
     // But not if slides are equal slide count... Then we only want to see offsetBefore
-    if (slidesLength > params.slidesPerView) {
-      snapGrid[snapGrid.length - 1] = snapGrid[snapGrid.length - 1] + offsetAfter;
+    if (typeof params.slidesPerView === 'number' && slidesLength > params.slidesPerView) {
+      snapGrid[snapGrid.length - 1] = snapGrid[snapGrid.length - 1]! + (offsetAfter as number);
     }
   }
   if (isVirtual && params.loop) {

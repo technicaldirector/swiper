@@ -303,12 +303,12 @@ export default function onTouchMove(
         setTranslate: true,
         activeSlideIndex: params.centeredSlides
           ? swiper.getSlideIndex(
-              swiper.slides.find((el) => el.classList.contains(params.slideActiveClass)),
+              swiper.slides.find((el) => el.classList.contains(params.slideActiveClass as string))!,
             )
           : swiper.slides.length -
             (params.slidesPerView === 'auto'
               ? swiper.slidesPerViewDynamic()
-              : Math.ceil(parseFloat(params.slidesPerView, 10))),
+              : Math.ceil(params.slidesPerView as number)),
       });
     }
     if (data.currentTranslate < swiper.maxTranslate()) {
